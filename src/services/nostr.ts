@@ -33,8 +33,45 @@ export class NostrService {
   }
 
   private async initRelays() {
-    await Promise.all(this.relays.map((url) => pool.ensureRelay(url)));
+    if (!this.relays?.length) {
+      throw new Error("No relays configured");
+    }
+
+    const results = await Promise.allSettled(
+      this.relays.map(async (url) => {
+        try {
+          console.log(`[NostrService] Connecting to relay: ${url}`);
+          const relay = await pool.ensureRelay(url);
+          console.log(`[NostrService] ✅ Connected to ${url}`);
+          return { url, ok: true, relay };
+        } catch (err) {
+          console.warn(`[NostrService] ⚠️ Failed to connect to ${url}:`, err);
+          return { url, ok: false, err };
+        }
+      })
+    );
+
+    const successes = results.filter(
+      (r) => r.status === "fulfilled" && r.value.ok
+    );
+    const failures = results.filter(
+      (r) => r.status === "fulfilled" && !r.value.ok
+    );
+
+    console.log(
+      `[NostrService] Relay init summary: ${successes.length} succeeded, ${failures.length} failed`
+    );
+
+    if (successes.length === 0) {
+      throw new Error(
+        "Failed to connect to any relay. All connections timed out."
+      );
+    }
+
+    // Optionally store only working relays (if pool doesn't handle dead ones automatically)
+    this.relays = successes.map((r) => r.value.url);
   }
+
   async connect() {
     try {
       await this.initRelays();
