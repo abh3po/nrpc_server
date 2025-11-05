@@ -97,7 +97,7 @@ export class NostrService {
       } catch (err) {
         console.error("[NostrService] heartbeat error", err);
       }
-    }, 500 * 1000);
+    }, 1800 * 1000);
   }
 
   private async closeSubscriptions() {
