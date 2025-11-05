@@ -10,10 +10,14 @@ if (process.argv.includes("-d")) {
   const out = fs.openSync(logFile, "a");
   const err = fs.openSync(logFile, "a");
 
-  const subprocess = spawn(process.execPath, process.argv.slice(1).filter(a => a !== "-d"), {
-    detached: true,
-    stdio: ["ignore", out, err],
-  });
+  const subprocess = spawn(
+    process.execPath,
+    process.argv.slice(1).filter((a) => a !== "-d"),
+    {
+      detached: true,
+      stdio: ["ignore", out, err],
+    }
+  );
 
   subprocess.unref();
 
@@ -66,16 +70,24 @@ async function main() {
   if (CONFIG.mintUrl) {
     new GiveawayController(Registry, CONFIG.mintUrl);
   }
-  new SchedulePostController(Registry)
+  new SchedulePostController(Registry);
 
   const nostr = new NostrService(CONFIG.relays);
   await nostr.connect();
   console.log("NRPC server started and connected to relays.");
 
   // 👇 Keep process alive indefinitely
-  setInterval(() => { }, 1 << 30);
+  setInterval(() => {}, 1 << 30);
 }
 
 main().catch((err) => {
-  console.log("Caught an error",err);
+  console.error("❌ Unhandled error in main():");
+
+  if (err instanceof Error) {
+    console.error(err.stack); // full traceback
+  } else {
+    console.error("Non-Error rejection:", err);
+  }
+
+  process.exit(1);
 });
