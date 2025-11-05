@@ -36,10 +36,21 @@ export class NostrService {
     await Promise.all(this.relays.map((url) => pool.ensureRelay(url)));
   }
   async connect() {
-    await this.initRelays();
-    await this.subscribeRequests();
+    try {
+      await this.initRelays();
+    } catch (err) {
+      console.error("❌ NostrService.connect() failed:");
+      if (err instanceof Error) {
+        console.error(err.stack);
+      } else {
+        console.error("Non-Error rejection:", err);
+        // synthetic stack — shows where in your code the rejection bubbled from
+        console.error(new Error("Traceback for non-Error rejection").stack);
+      }
+      throw err;
+    }
 
-    // 💡 Publish Kind 0 metadata on startup
+    await this.subscribeRequests();
     await this.publishProfileMetadata();
 
     // 🔁 Periodically refresh subscriptions
