@@ -73,7 +73,14 @@ async function main() {
   new SchedulePostController(Registry);
 
   const nostr = new NostrService(CONFIG.relays);
-  await nostr.connect();
+  try {
+    await nostr.connect();
+  } catch (err) {
+    console.error("❌ NostrService.connect() failed:");
+    console.error(err);
+    console.error(new Error().stack); // 👈 adds *your call stack*
+    throw err; // rethrow to main() for consistency
+  }
   console.log("NRPC server started and connected to relays.");
 
   // 👇 Keep process alive indefinitely
@@ -86,7 +93,7 @@ main().catch((err) => {
   if (err instanceof Error) {
     console.error(err.stack); // full traceback
   } else {
-    console.error("Non-Error rejection:", err);
+    console.error("Non-Error rejection:", err, typeof err);
   }
 
   process.exit(1);
