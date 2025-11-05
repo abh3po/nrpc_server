@@ -67,9 +67,6 @@ export class NostrService {
         "Failed to connect to any relay. All connections timed out."
       );
     }
-
-    // Optionally store only working relays (if pool doesn't handle dead ones automatically)
-    this.relays = successes.map((r) => r.value.url);
   }
 
   async connect() {
