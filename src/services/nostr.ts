@@ -20,6 +20,7 @@ import {
   NRPCParams,
 } from "../registry.js";
 import { signEvent } from "../utils.js";
+import { SubCloser } from "nostr-tools/lib/types/abstract-pool.js";
 
 export const pool = new SimplePool();
 
@@ -100,17 +101,15 @@ export class NostrService {
     }, 1800 * 1000);
   }
 
-  private async closeSubscriptions() {
+  private closeSubscriptions() {
     if (!this.subs?.length) return;
-    await Promise.all(
-      this.subs.map(async (s) => {
-        try {
-          s.close();
-        } catch (err) {
-          console.warn("[NostrService] error closing sub", err);
-        }
-      })
-    );
+    this.subs.map((s: SubCloser) => {
+      try {
+        s.close();
+      } catch (err) {
+        console.warn("[NostrService] error closing sub", err);
+      }
+    });
     this.subs = [];
   }
 
@@ -164,7 +163,7 @@ export class NostrService {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
     }
-    await this.closeSubscriptions();
+    this.closeSubscriptions();
   }
 
   private async subscribeRequests() {

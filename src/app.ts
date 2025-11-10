@@ -84,7 +84,7 @@ async function main() {
   console.log("NRPC server started and connected to relays.");
 
   // 👇 Keep process alive indefinitely
-  setInterval(() => {}, 1 << 30);
+  await new Promise(() => {});
 }
 
 main().catch((err) => {
